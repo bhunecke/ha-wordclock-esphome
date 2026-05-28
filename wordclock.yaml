@@ -1,25 +1,28 @@
+substitutions:
+  devicename: wordclock
+  friendly_name: "Wordclock"
+
+esp8266:
+  board: nodemcuv2
+
 esphome:
   name: ${devicename}
-  platform: ESP8266
-  board: nodemcuv2
-  includes:
-    - wordclock.h
   on_boot:
     priority: 800
     then:
       - light.turn_on: 
           id: fastledlight
-          
-substitutions:
-  devicename: wordclock
-  friendly_name: "Wordclock"
+
+external_components:
+  - source:
+      type: local
+      path: components
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
   fast_connect: true
   reboot_timeout: 0min
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "${devicename}"
     password: !secret wifi_password
@@ -31,6 +34,16 @@ wifi:
 api:
   password: !secret api_secret
   reboot_timeout: 30min
+  services:
+    - service: setled
+      variables:
+        number: int
+        red: int
+        blue: int
+        green: int
+      then:
+        - lambda: |-
+            id(my_wordclock)->on_setled(number, red, blue, green);
 
 ota:
   password: !secret ota_secret
@@ -38,21 +51,33 @@ ota:
 logger:
   esp8266_store_log_strings_in_flash: false
 
+output:
+  - platform: template
+    id: output_r
+    type: float
+    write_action: []
+  - platform: template
+    id: output_g
+    type: float
+    write_action: []
+  - platform: template
+    id: output_b
+    type: float
+    write_action: []
 
 light:
-  - platform: fastled_clockless
-    id: fastledlight
-    chipset: WS2812
-    pin: GPIO03
-    num_leds: 125
-    rgb_order: BRG
+  - platform: rgb
     name: ${friendly_name}
-  
+    id: fastledlight
+    red: output_r
+    green: output_g
+    blue: output_b
+
 time:
   - platform: homeassistant
     id: current_time
 
-custom_component:
-- lambda: |-
-    auto wordclock = new Wordclock();
-    return {wordclock};
+wordclock:
+  id: my_wordclock
+  time_id: current_time
+  light_id: fastledlight
