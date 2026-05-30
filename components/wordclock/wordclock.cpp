@@ -7,7 +7,7 @@ namespace wordclock {
 static const char *const TAG = "wordclock";
 
 #define NUM_LEDS 125
-#define DATA_PIN D5
+#define DATA_PIN 5
 
 int leds_time_it_is[] = {0, 1, 3, 4, 5}; // ES IST
 int leds_minutes[] = {124, 123, 122, 121}; // Minutes LEDS

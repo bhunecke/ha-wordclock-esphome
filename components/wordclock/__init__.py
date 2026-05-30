@@ -15,7 +15,7 @@ CONFIG_SCHEMA = cv.Schema({
 }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
-    cg.add_library("fastled/FastLED", "3.6.0")
+    cg.add_library("fastled/FastLED", "3.10.3")
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     
