@@ -52,9 +52,7 @@ wifi:
 captive_portal:
 
 external_components:
-  - source:
-      type: local
-      path: components
+  source: github://bhunecke/ha-wordclock-esphome@refactor/esphome-changes
 
 output:
   - platform: template
