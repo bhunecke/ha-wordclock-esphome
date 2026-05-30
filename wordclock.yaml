@@ -32,7 +32,8 @@ wifi:
     subnet: 255.255.255.0
 
 api:
-  password: !secret api_secret
+  encryption:
+    key: !secret api_secret
   reboot_timeout: 30min
   services:
     - service: setled
@@ -46,7 +47,8 @@ api:
             id(my_wordclock)->on_setled(number, red, blue, green);
 
 ota:
-  password: !secret ota_secret
+  - platform: esphome
+    password: !secret ota_secret
 
 logger:
   esp8266_store_log_strings_in_flash: false
