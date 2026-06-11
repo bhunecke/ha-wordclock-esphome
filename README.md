@@ -13,14 +13,14 @@ It uses the time and fastled plattform of esphome to controll the clock.
 - uses esphome for OTA/API
 - supports minutes LEDS
 
-![Image of final wordclock](https://github.com/leinich/ha-wordclock-esphome/blob/main/images/Front.png?raw=true)
+![Image of final wordclock](images/Front.png)
 
 ## Shopping list
 
 - Mirror 30x30 (IKEA LOTS - 7.99EUR/4Pack)
 - Woodframe
 - Wood for Back and inlay
-- ESP8266
+- ESP32
 - 125x WS2812B LEDS
 - Glue, wires and solder
 
@@ -47,11 +47,10 @@ It uses the time and fastled plattform of esphome to controll the clock.
   MINUTES        124.......121
   ```
 
-![Image of final wordclock](https://github.com/leinich/ha-wordclock-esphome/blob/main/images/Back_leds.png?raw=true)
+![Image of final wordclock](images/Back_leds.png)
 
-- Connect Ground and 5V and Data Pin of WS2812 to D5 Pin to the ESP8266
-- Copy wordclock.yaml and wordclock.h into /config/esphome directory
-- Using esphome GUI you can flash wordclock.yaml to an esp8266
+- Connect Ground and 5V and Data Pin of WS2812 to GPIO5 on the ESP32
+- Using esphome GUI you can flash wordclock.yaml to your ESP32
 
 ## Home Assistant integration
 
