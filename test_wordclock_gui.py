@@ -70,7 +70,10 @@ def get_lit_leds(hour, minute):
         lit.extend(leds_time_minutes[tmp_minute])
         
     if tmp_hour < len(leds_time_hours):
-        lit.extend(leds_time_hours[tmp_hour])
+        hour_leds = list(leds_time_hours[tmp_hour])
+        if tmp_hour == 1 and tmp_minute == 0 and 60 in hour_leds:
+            hour_leds.remove(60)
+        lit.extend(hour_leds)
         
     min_dots = leds_minutes[:minutessum]
     return lit, min_dots

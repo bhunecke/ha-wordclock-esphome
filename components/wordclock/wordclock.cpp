@@ -109,7 +109,11 @@ void Wordclock::loop() {
         for(int i = 0; i < NUM_LEDS; i++) {     if(i < 110 || i > 120) leds[i].setRGB(0, 0, 0); }
         for(int i = 0; i < 5; i++) {            leds[leds_time_it_is[i]].setRGB(red_, green_, blue_); }
         for(int i = 0; i < 15; i++) {           if(leds_time_minutes[tmp_minute][i] >= 0) { leds[leds_time_minutes[tmp_minute][i]].setRGB(red_, green_, blue_); } }
-        for(int i = 0; i < 6; i++) {            if(leds_time_hours[tmp_hour][i] >= 0) { leds[leds_time_hours[tmp_hour][i]].setRGB(red_, green_, blue_); } }
+        for(int i = 0; i < 6; i++) {            
+          int led_idx = leds_time_hours[tmp_hour][i];
+          if (tmp_hour == 1 && tmp_minute == 0 && led_idx == 60) continue; // EIN UHR instead of EINS UHR
+          if(led_idx >= 0) { leds[led_idx].setRGB(red_, green_, blue_); } 
+        }
         for(int i = 0; i < minutessum; i++) {   leds[leds_minutes[i]].setRGB(red_, green_, blue_);}
         
         FastLED.show();
