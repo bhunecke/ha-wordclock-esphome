@@ -21,7 +21,7 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: !secret api_secret
+    key: !secret wordclock__encryption_key
   reboot_timeout: 30min
   services:
     - service: setled
@@ -36,7 +36,7 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret ota_secret
+    password: !secret wordclock__ota_secret
 
 wifi:
   ssid: !secret wifi_ssid
@@ -47,7 +47,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "${devicename}"
-    password: !secret ap_password
+    password: !secret wordclock__ap_password
 
 captive_portal:
 
