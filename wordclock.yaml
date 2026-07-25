@@ -8,12 +8,12 @@ esphome:
     priority: 800
     then:
       - light.turn_on: 
-          id: fastledlight
+          id: wordclock_light
 
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 # Enable logging
 logger:
@@ -52,29 +52,18 @@ wifi:
 captive_portal:
 
 external_components:
-  source: github://bhunecke/ha-wordclock-esphome@main
-
-output:
-  - platform: template
-    id: output_r
-    type: float
-    write_action: []
-  - platform: template
-    id: output_g
-    type: float
-    write_action: []
-  - platform: template
-    id: output_b
-    type: float
-    write_action: []
+  source: github://bhunecke/ha-wordclock-esphome@feature/esp-idf-migration
 
 light:
-  - platform: rgb
+  - platform: esp32_rmt_led_strip
     name: ${friendly_name}
-    id: fastledlight
-    red: output_r
-    green: output_g
-    blue: output_b
+    id: wordclock_light
+    pin: GPIO22
+    num_leds: 125
+    rgb_order: GRB
+    chipset: ws2812
+    restore_mode: ALWAYS_OFF
+    default_transition_length: 0s
 
 time:
   - platform: homeassistant
@@ -83,4 +72,4 @@ time:
 wordclock:
   id: my_wordclock
   time_id: current_time
-  light_id: fastledlight
+  light_id: wordclock_light

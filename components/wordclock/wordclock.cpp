@@ -7,7 +7,6 @@ namespace wordclock {
 static const char *const TAG = "wordclock";
 
 #define NUM_LEDS 125
-#define DATA_PIN 5
 
 int leds_time_it_is[] = {0, 1, 3, 4, 5}; // ES IST
 int leds_minutes[] = {124, 123, 122, 121}; // Minutes LEDS
@@ -42,26 +41,23 @@ int leds_time_hours[][6] = {
     { 87,  86,  85,  -1,  -1,  -1}  // ELF
 };
 
-CRGB leds[NUM_LEDS];
-
 void Wordclock::setup() {
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
-  FastLED.setBrightness(brightness_);
+  this->led_strip_ = static_cast<light::AddressableLight *>(light_->get_output());
   // Start all LED with on and default color and brightness to check if everything is working...
-  for(int i = 0; i < NUM_LEDS; i++) { leds[i].setRGB(red_, 0, 0); FastLED.show(); delay(10); }
-  for(int i = 0; i < NUM_LEDS; i++) { leds[i].setRGB(0, green_, 0); FastLED.show(); delay(10); }
-  for(int i = 0; i < NUM_LEDS; i++) { leds[i].setRGB(0, 0, blue_); FastLED.show(); delay(10); }
-  for(int i = 0; i < NUM_LEDS; i++) { leds[i].setRGB(0, 0, 0); }
-  FastLED.show();
+  for (int i = 0; i < NUM_LEDS; i++) { (*this->led_strip_)[i] = Color(red_, 0, 0); this->led_strip_->write_state(light_); delay(10); }
+  for (int i = 0; i < NUM_LEDS; i++) { (*this->led_strip_)[i] = Color(0, green_, 0); this->led_strip_->write_state(light_); delay(10); }
+  for (int i = 0; i < NUM_LEDS; i++) { (*this->led_strip_)[i] = Color(0, 0, blue_); this->led_strip_->write_state(light_); delay(10); }
+  for (int i = 0; i < NUM_LEDS; i++) { (*this->led_strip_)[i] = Color(0, 0, 0); }
+  this->led_strip_->write_state(light_);
 }
 
 void Wordclock::on_setled(int number, int red, int blue, int green) {
   if (number < NUM_LEDS && number >= 0) {
-    ESP_LOGD(TAG, "Setting led number %d to color %i %i %i", number, red, green, blue );
-    leds[number].setRGB(red, green, blue);
-    FastLED.show();
-  } else { 
-    ESP_LOGE(TAG, "Not a valid LED Number - out of range"); 
+    ESP_LOGD(TAG, "Setting led number %d to color %i %i %i", number, red, green, blue);
+    (*this->led_strip_)[number] = Color(red, green, blue);
+    this->led_strip_->schedule_show();
+  } else {
+    ESP_LOGE(TAG, "Not a valid LED Number - out of range");
   }
 }
 
@@ -72,52 +68,50 @@ void Wordclock::loop() {
   int h = time.hour;
   int m = time.minute;
 
-  auto fastledlight2 = light_->current_values;
-  red_ = (int)(fastledlight2.get_red()*255);
-  green_ = (int)(fastledlight2.get_green()*255);
-  blue_ = (int)(fastledlight2.get_blue()*255);
+  auto light_values = light_->current_values;
   brightness_ = 0;
 
-  if (fastledlight2.get_state() > 0 ) { 
-    brightness_ = (int)(fastledlight2.get_brightness()*255); 
-  } else { 
-    ESP_LOGD(TAG, "fastledlight state off - b: %i rgb %i %i %i", brightness_, red_, green_, blue_); 
+  int r = 0, g = 0, b = 0;
+  if (light_values.get_state() > 0) {
+    brightness_ = (int) (light_values.get_brightness() * 255);
+    r = (int) (light_values.get_red() * light_values.get_brightness() * 255);
+    g = (int) (light_values.get_green() * light_values.get_brightness() * 255);
+    b = (int) (light_values.get_blue() * light_values.get_brightness() * 255);
+  } else {
+    ESP_LOGD(TAG, "wordclock light state off - b: %i rgb %i %i %i", brightness_, r, g, b);
     delay(500);
   }
 
-  FastLED.setBrightness(brightness_);
-
   if (time.is_valid() == false) {
-    ESP_LOGE(TAG, "Got invalid time from current_time Time: %i:%i", h, m );
-    leds[0].setRGB(255, 0, 0); FastLED.show(); delay(250);
-    leds[0].setRGB(0, 255, 0); FastLED.show(); delay(250);
-    leds[0].setRGB(0, 0, 255); FastLED.show(); delay(250);
-    leds[0].setRGB(0, 0, 0);   FastLED.show();
+    ESP_LOGE(TAG, "Got invalid time from current_time Time: %i:%i", h, m);
+    (*this->led_strip_)[0] = Color(255, 0, 0); this->led_strip_->write_state(light_); delay(250);
+    (*this->led_strip_)[0] = Color(0, 255, 0); this->led_strip_->write_state(light_); delay(250);
+    (*this->led_strip_)[0] = Color(0, 0, 255); this->led_strip_->write_state(light_); delay(250);
+    (*this->led_strip_)[0] = Color(0, 0, 0);   this->led_strip_->write_state(light_);
   } else {
-    // only update once in a Minute
-    if(h != hour_ || m != minute_) {
+    if (h != hour_ || m != minute_) {
       hour_ = h;
       minute_ = m;
-      if (hour_ >= 0 && time.is_valid() == true){
+      if (hour_ >= 0 && time.is_valid() == true) {
         int tmp_hour = hour_;
         int tmp_minute = (minute_ - (minute_ % 5));
-        if(tmp_minute >= 25) { tmp_hour += 1; }
+        if (tmp_minute >= 25) { tmp_hour += 1; }
         tmp_minute = tmp_minute / 5;
         tmp_hour = tmp_hour % 12;
         int minutessum = minute_ % 5;
-        
-        for(int i = 0; i < NUM_LEDS; i++) {     if(i < 110 || i > 120) leds[i].setRGB(0, 0, 0); }
-        for(int i = 0; i < 5; i++) {            leds[leds_time_it_is[i]].setRGB(red_, green_, blue_); }
-        for(int i = 0; i < 15; i++) {           if(leds_time_minutes[tmp_minute][i] >= 0) { leds[leds_time_minutes[tmp_minute][i]].setRGB(red_, green_, blue_); } }
-        for(int i = 0; i < 6; i++) {            
+
+        for (int i = 0; i < NUM_LEDS; i++) {     if (i < 110 || i > 120) (*this->led_strip_)[i] = Color(0, 0, 0); }
+        for (int i = 0; i < 5; i++) {            (*this->led_strip_)[leds_time_it_is[i]] = Color(r, g, b); }
+        for (int i = 0; i < 15; i++) {           if (leds_time_minutes[tmp_minute][i] >= 0) { (*this->led_strip_)[leds_time_minutes[tmp_minute][i]] = Color(r, g, b); } }
+        for (int i = 0; i < 6; i++) {
           int led_idx = leds_time_hours[tmp_hour][i];
           if (tmp_hour == 1 && tmp_minute == 0 && led_idx == 60) continue; // EIN UHR instead of EINS UHR
-          if(led_idx >= 0) { leds[led_idx].setRGB(red_, green_, blue_); } 
+          if (led_idx >= 0) { (*this->led_strip_)[led_idx] = Color(r, g, b); }
         }
-        for(int i = 0; i < minutessum; i++) {   leds[leds_minutes[i]].setRGB(red_, green_, blue_);}
-        
-        FastLED.show();
-        ESP_LOGD(TAG, "Update Time: %i:%i  Brightness: %i RGB: %i-%i-%i", hour_, minute_, brightness_, red_, green_, blue_);
+        for (int i = 0; i < minutessum; i++) {   (*this->led_strip_)[leds_minutes[i]] = Color(r, g, b); }
+
+        this->led_strip_->schedule_show();
+        ESP_LOGD(TAG, "Update Time: %i:%i  Brightness: %i RGB: %i-%i-%i", hour_, minute_, brightness_, r, g, b);
         ESP_LOGD(TAG, "Using tmp_hour: %i tmp_minute: %i minutessum: %i", tmp_hour, tmp_minute, minutessum);
       }
     }

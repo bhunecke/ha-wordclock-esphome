@@ -3,7 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/components/light/light_state.h"
-#include <FastLED.h>
+#include "esphome/components/light/addressable_light.h"
 
 namespace esphome {
 namespace wordclock {
@@ -20,6 +20,7 @@ class Wordclock : public Component {
  protected:
   time::RealTimeClock *time_{nullptr};
   light::LightState *light_{nullptr};
+  light::AddressableLight *led_strip_{nullptr};
 
   int hour_ = -1;
   int minute_ = -1;
