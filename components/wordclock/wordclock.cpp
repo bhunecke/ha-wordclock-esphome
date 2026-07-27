@@ -9,7 +9,6 @@ static const char *const TAG = "wordclock";
 #define NUM_LEDS 125
 
 int leds_time_it_is[] = {0, 1, 3, 4, 5}; // ES IST
-int leds_minutes[] = {124, 123, 122, 121}; // Minutes LEDS
 int leds_time_minutes[][15] = {
     {101, 100,  99,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1}, // UHR
     {  7,   8,   9,  10,  41,  40,  39,  38,  -1,  -1,  -1,  -1,  -1,  -1,  -1}, // FÜNF, NACH
@@ -77,7 +76,6 @@ void Wordclock::loop() {
   int tmp_hour = h % 12;
   int tmp_minute = (m - (m % 5)) / 5;
   if ((m % 5) >= 25) tmp_hour = (tmp_hour + 1) % 12;
-  int minutessum = m % 5;
 
   for (int i = 0; i < NUM_LEDS; i++) {
     if (i < 110 || i > 120) (*this->led_strip_)[i] = Color(0, 0, 0);
@@ -95,15 +93,12 @@ void Wordclock::loop() {
     if (tmp_hour == 1 && tmp_minute == 0 && led_idx == 60) continue;
     if (led_idx >= 0) (*this->led_strip_)[led_idx] = Color(r, g, b);
   }
-  for (int i = 0; i < minutessum; i++) {
-    (*this->led_strip_)[leds_minutes[i]] = Color(r, g, b);
-  }
 
   this->led_strip_->schedule_show();
 
   if (m != this->last_log_minute_) {
     this->last_log_minute_ = m;
-    ESP_LOGD(TAG, "Time: %i:%i  RGB: %i-%i-%i  (tmp_hour: %i tmp_minute: %i dots: %i)", h, m, r, g, b, tmp_hour, tmp_minute, minutessum);
+    ESP_LOGD(TAG, "Time: %i:%i  RGB: %i-%i-%i  (tmp_hour: %i tmp_minute: %i)", h, m, r, g, b, tmp_hour, tmp_minute);
   }
 }
 
