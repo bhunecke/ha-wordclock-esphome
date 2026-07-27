@@ -39,6 +39,19 @@ int leds_time_hours[][6] = {
     { 87,  86,  85,  -1,  -1,  -1}  // ELF
 };
 
+const char *const log_leds[10][11] = {
+    { "E", "S", "K", "I", "S", "T", "L", "F", "Ü", "N", "F" },
+    { "Z", "E", "H", "N", "Z", "W", "A", "N", "Z", "I", "G" },
+    { "D", "R", "E", "I", "V", "I", "E", "R", "T", "E", "L" },
+    { "T", "G", "N", "A", "C", "H", "V", "O", "R", "J", "M" },
+    { "H", "A", "L", "B", "Q", "Z", "W", "Ö", "L", "F", "P" },
+    { "Z", "W", "E", "I", "N", "S", "I", "E", "B", "E", "N" },
+    { "K", "D", "R", "E", "I", "R", "H", "F", "Ü", "N", "F" },
+    { "E", "L", "F", "N", "E", "U", "N", "V", "I", "E", "R" },
+    { "W", "A", "C", "H", "T", "Z", "E", "H", "N", "R", "S" },
+    { "B", "S", "E", "C", "H", "S", "F", "M", "U", "H", "R" }
+};
+
 void Wordclock::setup() {
   this->led_strip_ = static_cast<light::AddressableLight *>(light_->get_output());
 }
@@ -99,6 +112,19 @@ void Wordclock::loop() {
   if (m != this->last_log_minute_) {
     this->last_log_minute_ = m;
     ESP_LOGD(TAG, "Time: %i:%i  RGB: %i-%i-%i  (tmp_hour: %i tmp_minute: %i)", h, m, r, g, b, tmp_hour, tmp_minute);
+    for (int row = 0; row < 10; row++) {
+      char line[32];
+      int pos = 0;
+      int base = row * 11;
+      for (int col = 0; col < 11; col++) {
+        int idx = (row % 2 == 0) ? base + col : base + (10 - col);
+        auto led = (*this->led_strip_)[idx];
+        const char *s = (led.get_red() + led.get_green() + led.get_blue() > 0) ? log_leds[row][col] : "-";
+        while (*s) line[pos++] = *s++;
+      }
+      line[pos] = '\0';
+      ESP_LOGD(TAG, "%s", line);
+    }
   }
 }
 
