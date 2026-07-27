@@ -7,7 +7,7 @@ esphome:
   # on_boot:
   #   priority: -100
   #   then:
-  #     - light.turn_on: 
+  #     - light.turn_on:
   #         id: wordclock_light
 
 esp32:
