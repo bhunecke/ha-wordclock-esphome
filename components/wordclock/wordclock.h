@@ -21,13 +21,7 @@ class Wordclock : public Component {
   time::RealTimeClock *time_{nullptr};
   light::LightState *light_{nullptr};
   light::AddressableLight *led_strip_{nullptr};
-
-  int hour_ = -1;
-  int minute_ = -1;
-  int red_ = 124;
-  int green_ = 124;
-  int blue_ = 124;
-  int brightness_ = 50;
+  int last_log_minute_{-1};
 };
 
 }  // namespace wordclock
