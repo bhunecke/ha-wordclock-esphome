@@ -62,11 +62,13 @@ light:
     name: ${friendly_name}
     id: wordclock_light
     pin: GPIO22
-    num_leds: 125
+    num_leds: 180
     rgb_order: GRB
     chipset: WS2812
+    is_rgbw: true
     restore_mode: ALWAYS_OFF
     default_transition_length: 0s
+    gamma_correct: "0"
 
 time:
   - platform: homeassistant

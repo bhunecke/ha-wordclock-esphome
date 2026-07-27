@@ -6,8 +6,6 @@ namespace wordclock {
 
 static const char *const TAG = "wordclock";
 
-#define NUM_LEDS 125
-
 int leds_time_it_is[] = {0, 1, 3, 4, 5}; // ES IST
 int leds_time_minutes[][15] = {
     {101, 100,  99,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1}, // UHR
@@ -57,7 +55,7 @@ void Wordclock::setup() {
 }
 
 void Wordclock::on_setled(int number, int red, int blue, int green) {
-  if (number < NUM_LEDS && number >= 0) {
+  if (led_strip_ != nullptr && number < led_strip_->size() && number >= 0) {
     ESP_LOGD(TAG, "Setting led number %d to color %i %i %i", number, red, green, blue);
     (*this->led_strip_)[number] = Color(red, green, blue);
     this->led_strip_->schedule_show();
@@ -82,6 +80,8 @@ void Wordclock::loop() {
   int r = (int) (values.get_red() * values.get_brightness() * 255);
   int g = (int) (values.get_green() * values.get_brightness() * 255);
   int b = (int) (values.get_blue() * values.get_brightness() * 255);
+  int w = (int) (values.get_white() * values.get_brightness() * 255);
+  Color color(r, g, b, w);
 
   int h = time.hour;
   int m = time.minute;
@@ -90,28 +90,30 @@ void Wordclock::loop() {
   int tmp_minute = (m - (m % 5)) / 5;
   if ((m % 5) >= 25) tmp_hour = (tmp_hour + 1) % 12;
 
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if (i < 110 || i > 120) (*this->led_strip_)[i] = Color(0, 0, 0);
+  int n = this->led_strip_->size();
+  Color off(0, 0, 0, 0);
+  for (int i = 0; i < n; i++) {
+    if (i < 110 || i > 120) (*this->led_strip_)[i] = off;
   }
   for (int i = 0; i < 5; i++) {
-    (*this->led_strip_)[leds_time_it_is[i]] = Color(r, g, b);
+    (*this->led_strip_)[leds_time_it_is[i]] = color;
   }
   for (int i = 0; i < 15; i++) {
     if (leds_time_minutes[tmp_minute][i] >= 0) {
-      (*this->led_strip_)[leds_time_minutes[tmp_minute][i]] = Color(r, g, b);
+      (*this->led_strip_)[leds_time_minutes[tmp_minute][i]] = color;
     }
   }
   for (int i = 0; i < 6; i++) {
     int led_idx = leds_time_hours[tmp_hour][i];
     if (tmp_hour == 1 && tmp_minute == 0 && led_idx == 60) continue;
-    if (led_idx >= 0) (*this->led_strip_)[led_idx] = Color(r, g, b);
+    if (led_idx >= 0) (*this->led_strip_)[led_idx] = color;
   }
 
   this->led_strip_->schedule_show();
 
   if (m != this->last_log_minute_) {
     this->last_log_minute_ = m;
-    ESP_LOGD(TAG, "Time: %i:%i  RGB: %i-%i-%i  (tmp_hour: %i tmp_minute: %i)", h, m, r, g, b, tmp_hour, tmp_minute);
+    ESP_LOGD(TAG, "Time: %i:%i  RGBW: %i-%i-%i-%i  (tmp_hour: %i tmp_minute: %i)", h, m, r, g, b, w, tmp_hour, tmp_minute);
     for (int row = 0; row < 10; row++) {
       char line[32];
       int pos = 0;
@@ -119,7 +121,7 @@ void Wordclock::loop() {
       for (int col = 0; col < 11; col++) {
         int idx = (row % 2 == 0) ? base + col : base + (10 - col);
         auto led = (*this->led_strip_)[idx];
-        const char *s = (led.get_red() + led.get_green() + led.get_blue() > 0) ? log_leds[row][col] : "-";
+        const char *s = (led.get_red() + led.get_green() + led.get_blue() + led.get_white() > 0) ? log_leds[row][col] : "-";
         while (*s) line[pos++] = *s++;
       }
       line[pos] = '\0';
